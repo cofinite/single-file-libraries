@@ -71,8 +71,8 @@ typedef struct FsbaAllocator FsbaAllocator;
  *  
  *  @param[in] blockAlign The alignment requirement of the memory blocks.
  *  
- *  @param[out] pBlockCount Where to store the total number of blocks that can
- *  be allocated at once, or `NULL`.
+ *  @param[out] pBlockCount Where to store the maximum number of blocks that
+ *  can be allocated at once, or `NULL`.
  *  
  *  @return A handle to the allocator, or `NULL` if not given enough memory.
  *  
@@ -116,7 +116,8 @@ void fsbaFree(FsbaAllocator* pAllocator, void* pBlock);
 
 /*! @brief Returns the size of an allocator.
  *  
- *  This function returns the size of an allocator object.
+ *  This function returns the size of an allocator object. Can be good to know
+ *  when optimizing the memory given to an allocator.
  *  
  *  @return sizeof(FsbaAllocator)
  */
@@ -124,7 +125,8 @@ size_t fsbaAllocatorSize(void);
 
 /*! @brief Returns the alignment requirement of an allocator.
  *  
- *  This function returns the alignment requirement of an allocator object.
+ *  This function returns the alignment requirement of an allocator object. Can
+ *  be good to know when optimizing the memory given to an allocator.
  *  
  *  @return alignof(FsbaAllocator)
  */
