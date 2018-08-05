@@ -145,7 +145,7 @@ struct FsbaAllocator {
     void** pFreeBlock;
 };
 
-#define fsba_alignof(type) ((size_t)&((struct {char x; type y;}*)0)->y)
+#define fsba_alignof(type) offsetof(struct {char x; type y;}, y)
 
 static void* fsba_alignUp(void* ptr, size_t align)
 {
