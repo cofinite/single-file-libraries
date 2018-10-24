@@ -10,7 +10,8 @@ Other source or header files should have just:
 
 
 The purpose of this library is to provide fast, dynamic allocation of fixed-
-size objects in portable C89 and to do so generically and without dependencies.
+size objects in portable C89 and to do so in a generic, type-safe[1], and
+dependency-free way.
 
 How to use:
 
@@ -20,14 +21,14 @@ How to use:
         MemPool(T) pool = mpInit(&pool);
         
     Then, you may call `mpGrowPool` to increase the initial capacity of the
-    pool, or simply begin calling `mpAlloc` to start allocating objects:
+    pool[2], or simply begin calling `mpAlloc` to start allocating objects[3]:
         
         mpGrowPool(&pool, 100); // optional
         size_t handle = mpAlloc(&pool);
         
     `mpAlloc` returns a handle into the memory pool, which is valid as long as
     it is not freed via `mpFree` or the entire pool freed via `mpFreePool`.
-    To access an object via its handle, use the `mpAt` macro:
+    To access an object via its handle, use the `mpAt` macro[4]:
         
         mpAt(&pool, handle).foo = 1;
         mpAt(&pool, handle).bar = mpAt(&pool, handle).foo + 1;
@@ -49,13 +50,17 @@ How to use:
 
 Notes:
     
-    `mpAt` does not perform bounds checking, nor does it make sure that the
-    handle is valid. Call it only with valid handles.
+    [1] Accessed objects have the correct type.
     
-    `mpGrowPool` will return 0 on success and -1 in an out-of-memory situation.
+    [2] `mpGrowPool` will return 0 on success and -1 in an out-of-memory
+    situation.
     
-    `mpAlloc` will return a valid handle on success and `MP_INVALID_HANDLE` in
-    an out-of-memory situation.
+    [3] `mpAlloc` will return a valid handle on success and `MP_INVALID_HANDLE`
+    in an out-of-memory situation.
+    
+    [4] `mpAt` does not perform bounds checking, nor does it make sure that the
+    handle is valid. Call it only with valid handles, lest you segfault or
+    corrupt the pool.
     
     If you need to refer to the same type of `MemPool` several times, you should
     `typedef` it first:
