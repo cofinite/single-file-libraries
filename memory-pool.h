@@ -21,24 +21,22 @@ How to use:
         MemPool(T) pool = mpInit(&pool);
         
     Then, you may call `mpGrowPool` to increase the initial capacity of the
-    pool[2], or simply begin calling `mpAlloc` to start allocating objects[3]:
+    pool[2], or simply begin calling `mpAlloc` to start allocating objects:
         
         mpGrowPool(&pool, 100); // optional
         size_t handle = mpAlloc(&pool);
         
-    `mpAlloc` returns a handle into the memory pool, which is valid as long as
-    it is not freed via `mpFree` or the entire pool freed via `mpFreePool`.
-    To access an object via its handle, use the `mpAt` macro[4]:
+    `mpAlloc` returns a handle into the memory pool[3]. To access an object via
+    its handle, use the `mpAt` macro[4]:
         
         mpAt(&pool, handle).foo = 1;
         mpAt(&pool, handle).bar = mpAt(&pool, handle).foo + 1;
         
-    Once you are done using an object, call `mpFree` with the object's handle:
+    Once you are done using an object, call `mpFree` with the object's
+    handle[5]:
         
         mpFree(&pool, handle);
         
-    This will not free any memory, but it will make the object available for
-    `mpAlloc` to allocate again.
     Once you are done using the memory pool, call `mpFreePool` to release all
     memory associated with it:
         
@@ -52,15 +50,20 @@ Notes:
     
     [1] Accessed objects have the correct type.
     
-    [2] `mpGrowPool` will return 0 on success and -1 in an out-of-memory
+    [2] `mpGrowPool` returns 0 on success and -1 in an out-of-memory
     situation.
     
-    [3] `mpAlloc` will return a valid handle on success and `MP_INVALID_HANDLE`
-    in an out-of-memory situation.
+    [3] `mpAlloc` returns a valid handle of type `size_t` on success and
+    `MP_INVALID_HANDLE` in an out-of-memory situation. Addresses of allocated
+    objects are not stable and may change when the pool resizes, but handles
+    will remain valid until they are freed via `mpFree` or `mpFreePool`.
     
     [4] `mpAt` does not perform bounds checking, nor does it make sure that the
     handle is valid. Call it only with valid handles, lest you segfault or
     corrupt the pool.
+    
+    [5] `mpFree` makes an object available for `mpAlloc` to allocate again, but
+    does not actually decrea
     
     If you need to refer to the same type of `MemPool` several times, you should
     `typedef` it first:
