@@ -63,7 +63,8 @@ Notes:
     corrupt the pool.
     
     [5] `mpFree` makes an object available for `mpAlloc` to allocate again, but
-    does not actually decrea
+    does not decrease the capacity of the pool. To free memory associated with
+    the pool, you must free the entire pool using `mpFreePool`.
     
     If you need to refer to the same type of `MemPool` several times, you should
     `typedef` it first:
