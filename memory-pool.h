@@ -70,7 +70,7 @@ Notes:
         typedef MemPool(int) MemPoolInt;
         
     If you need to know the amount of memory used by the pool, call `mpCapacity`
-    to get the currently allocated
+    to get the number of currently allocatable objects.
 
 
 LICENSE
