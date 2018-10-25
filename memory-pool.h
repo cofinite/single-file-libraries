@@ -10,64 +10,57 @@ Other source or header files should have just:
 
 
 The purpose of this library is to provide fast, dynamic allocation of fixed-
-size objects in portable C89 and to do so in a generic, type-safe[1], and
+size objects in portable C89 and to do so in a generic, somewhat type-safe, and 
 dependency-free way.
 
 How to use:
-
-    To create a memory pool for objects of type `T`, declare a variable with the
-    type `MemPool(T)` and initialize it using the macro `mpInit`:
-
-        MemPool(T) pool = mpInit(&pool);
-        
-    Then, you may call `mpGrowPool` to increase the initial capacity of the
-    pool[2], or simply begin calling `mpAlloc` to start allocating objects:
-        
-        mpGrowPool(&pool, 100); // optional
-        size_t handle = mpAlloc(&pool);
-        
-    `mpAlloc` returns a handle into the memory pool[3]. To access an object via
-    its handle, use the `mpAt` macro[4]:
-        
-        mpAt(&pool, handle).foo = 1;
-        mpAt(&pool, handle).bar = mpAt(&pool, handle).foo + 1;
-        
-    Once you are done using an object, call `mpFree` with the object's
-    handle[5]:
-        
-        mpFree(&pool, handle);
-        
-    Once you are done using the memory pool, call `mpFreePool` to release all
-    memory associated with it:
-        
-        mpFreePool(&pool);
-        
-    After this, all previously allocated handles into the pool will be invalid.
-    The same pool may be used again via `mpGrowPool` and `mpAlloc` to allocate
-    new handles.
-
+    
+    // creating a memory pool, in this case for `ivec3` objects
+    MemPool(ivec3) pool = mpInit(&pool);
+    
+    // allocating an `ivec3` object and getting its handle
+    size_t handle = mpAlloc(&pool);
+    
+    // accessing the allocated object via its handle
+    mpAt(&pool, handle).x = 5;
+    mpAt(&pool, handle).y = 10;
+    mpAt(&pool, handle).z = 15;
+    
+    // deallocating the object via its handle
+    mpFree(&pool, handle);
+    
+    // releasing all memory associated with the memory pool
+    mpFreePool(&pool);
+    
 Notes:
     
-    [1] Accessed objects have the correct type.
+    The capacity of a pool is 0 after initialization. A pool will 
+    automatically resize if an object is requested but none are left. Reading 
+    the pool's current capacity can be done by calling `mpCapacity`.
     
-    [2] `mpGrowPool` returns 0 on success and -1 in an out-of-memory
-    situation.
+    If the number of objects you are about to request is known prior, you may 
+    call `mpGrowPool` to add to the pool's capacity manually. `mpGrowPool` 
+    returns 0 on success and -1 in an out-of-memory situation.
     
-    [3] `mpAlloc` returns a valid handle of type `size_t` on success and
-    `MP_INVALID_HANDLE` in an out-of-memory situation. Addresses of allocated
-    objects are not stable and may change when the pool resizes, but handles
+    `mpAlloc` returns a valid handle of type `size_t` on success and 
+    `MP_INVALID_HANDLE` in an out-of-memory situation. Addresses of allocated 
+    objects are not stable and may change when the pool resizes, but handles 
     will remain valid until they are freed via `mpFree` or `mpFreePool`.
     
-    [4] `mpAt` does not perform bounds checking, nor does it make sure that the
-    handle is valid. Call it only with valid handles, lest you segfault or
-    corrupt the pool.
+    `mpAt` and `mpFree` do not perform bounds checking, nor do they check that 
+    the handle is valid. Call them only with valid handles, lest you segfault 
+    or corrupt the pool.
     
-    [5] `mpFree` makes an object available for `mpAlloc` to allocate again, but
-    does not decrease the capacity of the pool. To free memory associated with
+    `mpFree` makes an object available for `mpAlloc` to allocate again, but 
+    does not decrease the capacity of the pool. To free memory associated with 
     the pool, you must free the entire pool using `mpFreePool`.
     
-    If you need to refer to the same type of `MemPool` several times, you should
-    `typedef` it first:
+    After a call to `mpFreePool`, the capacity of the pool is 0 and all 
+    previously allocated handles are invalid. The same pool can be reused via 
+    `mpGrowPool` or `mpAlloc` to get new handles.
+    
+    If you need to refer to the same type of `MemPool` several times, you 
+    should `typedef` it first:
         
         typedef MemPool(int) IntPool;
 
@@ -83,7 +76,7 @@ See end of file for license information.
 
 #include <stddef.h>
 
-typedef struct MemPoolInfo {
+struct MemPool_internal {
     union {
         size_t  next;
     } *pBlocks;
@@ -91,30 +84,30 @@ typedef struct MemPoolInfo {
     size_t  hFreeArray;
     size_t  hFreeList;
     size_t  blockSize;
-} MemPoolInfo;
+};
 
-#define MemPool(type)   \
-union {                 \
-    MemPoolInfo info;   \
-    union {             \
-        size_t  next;   \
-        type    value;  \
-    } *pBlocks;         \
+#define MemPool(type)               \
+union {                             \
+    struct MemPool_internal info;   \
+    union {                         \
+        size_t  next;               \
+        type    value;              \
+    } *pBlocks;                     \
 }
 
-#define mpInit(pMemPool)        {{NULL, 0, 0, -1, sizeof(*(pMemPool)->pBlocks)}}
-#define mpAt(pMemPool, handle)  ((pMemPool)->pBlocks[handle].value)
-#define mpCapacity(pMemPool)    ((const size_t)(pMemPool)->info.capacity)
+#define mpInit(pMemPool)       {{NULL, 0, 0, -1, sizeof(*(pMemPool)->pBlocks)}}
+#define mpAt(pMemPool, handle) ((pMemPool)->pBlocks[handle].value)
+#define mpCapacity(pMemPool)   ((const size_t)(pMemPool)->info.capacity)
 
-#define mpGrowPool(pMemPool, num)   mpGrowPoolEx(&(pMemPool)->info, (num))
-#define mpFreePool(pMemPool)        mpFreePoolEx(&(pMemPool)->info)
-#define mpAlloc(pMemPool)           mpAllocEx(&(pMemPool)->info)
-#define mpFree(pMemPool, handle)    mpFreeEx(&(pMemPool)->info, (handle))
+#define mpGrowPool(pMemPool, num) mpGrowPool_internal(&(pMemPool)->info, (num))
+#define mpFreePool(pMemPool)      mpFreePool_internal(&(pMemPool)->info)
+#define mpAlloc(pMemPool)         mpAlloc_internal(&(pMemPool)->info)
+#define mpFree(pMemPool, handle)  mpFree_internal(&(pMemPool)->info, (handle))
 
-int     mpGrowPoolEx    (MemPoolInfo* this, size_t num);
-void    mpFreePoolEx    (MemPoolInfo* this);
-size_t  mpAllocEx       (MemPoolInfo* this);
-void    mpFreeEx        (MemPoolInfo* this, size_t handle);
+int     mpGrowPool_internal (struct MemPool_internal* this, size_t num);
+void    mpFreePool_internal (struct MemPool_internal* this);
+size_t  mpAlloc_internal    (struct MemPool_internal* this);
+void    mpFree_internal     (struct MemPool_internal* this, size_t handle);
 
 #define MP_INVALID_HANDLE ((size_t)(-1))
 
@@ -129,7 +122,7 @@ void    mpFreeEx        (MemPoolInfo* this, size_t handle);
 #define _MP_GROWTH_FACTOR_NUMERATOR     3
 #define _MP_GROWTH_FACTOR_DENOMINATOR   2
 
-static int _mpResize(MemPoolInfo* this, size_t capacity)
+static int _mpResize(struct MemPool_internal* this, size_t capacity)
 {
     void* temp = realloc(this->pBlocks, capacity * this->blockSize);
     if (temp == NULL) {
@@ -140,12 +133,12 @@ static int _mpResize(MemPoolInfo* this, size_t capacity)
     return 0;
 }
 
-static size_t* _mpNext(MemPoolInfo* this, size_t handle)
+static size_t* _mpNext(struct MemPool_internal* this, size_t handle)
 {
     return (size_t*)((char*)this->pBlocks + handle * this->blockSize);
 }
 
-int mpGrowPoolEx(MemPoolInfo* this, size_t num)
+int mpGrowPool_internal(struct MemPool_internal* this, size_t num)
 {
     size_t newCapacity = this->capacity + num;
     if (newCapacity < this->capacity) {
@@ -154,7 +147,7 @@ int mpGrowPoolEx(MemPoolInfo* this, size_t num)
     return _mpResize(this, this->capacity + num);
 }
 
-void mpFreePoolEx(MemPoolInfo* this)
+void mpFreePool_internal(struct MemPool_internal* this)
 {
     if (this->pBlocks != NULL) {
         free(this->pBlocks);
@@ -165,7 +158,7 @@ void mpFreePoolEx(MemPoolInfo* this)
     this->hFreeList = MP_INVALID_HANDLE;
 }
 
-size_t mpAllocEx(MemPoolInfo* this)
+size_t mpAlloc_internal(struct MemPool_internal* this)
 {
     size_t handle = this->hFreeList;
     if (handle != MP_INVALID_HANDLE) {
@@ -173,9 +166,7 @@ size_t mpAllocEx(MemPoolInfo* this)
         return handle;
     }
     if (this->hFreeArray >= this->capacity) {
-        size_t newCapacity = this->capacity *
-            _MP_GROWTH_FACTOR_NUMERATOR /
-            _MP_GROWTH_FACTOR_DENOMINATOR;
+        size_t newCapacity = this->capacity * 3 / 2;
         if (newCapacity < this->capacity) {
             return MP_INVALID_HANDLE;
         }
@@ -191,12 +182,10 @@ size_t mpAllocEx(MemPoolInfo* this)
     return handle;
 }
 
-void mpFreeEx(MemPoolInfo* this, size_t handle)
+void mpFree_internal(struct MemPool_internal* this, size_t handle)
 {
-    if (handle != MP_INVALID_HANDLE) {
-        *_mpNext(this, handle) = this->hFreeList;
-        this->hFreeList = handle;
-    }
+    *_mpNext(this, handle) = this->hFreeList;
+    this->hFreeList = handle;
 }
 
 #endif /* MEMORY_POOL_IMPLEMENTATION */
