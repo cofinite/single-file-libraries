@@ -15,16 +15,15 @@ dependency-free way.
 
 How to use:
     
-    // creating a memory pool, in this case for `ivec3` objects
-    MemPool(ivec3) pool = mpInit(&pool);
+    // creating a memory pool for objects of type `MyType`
+    MemPool(MyType) pool = mpInit(&pool);
     
-    // allocating an `ivec3` object and getting its handle
+    // allocating an object and getting its handle
     size_t handle = mpAlloc(&pool);
     
     // accessing the allocated object via its handle
-    mpAt(&pool, handle).x = 5;
-    mpAt(&pool, handle).y = 10;
-    mpAt(&pool, handle).z = 15;
+    mpAt(&pool, handle).foo = whatever;
+    mpAt(&pool, handle).bar = something;
     
     // deallocating the object via its handle
     mpFree(&pool, handle);
