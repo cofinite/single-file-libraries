@@ -35,14 +35,14 @@ How to use:
 Notes:
     
     The capacity of a pool is 0 after initialization. A pool will 
-    automatically resize if an object is requested but none are left. Reading 
-    a pool's current capacity can be done by calling `mpCapacity`.
+    automatically resize if an object is requested but none are left. 
+    `mpCapacity` returns the current capacity of a pool.
     
     If the number of objects you are about to allocate is known prior, you may 
     call `mpGrowPool` to add to the pool's capacity manually. `mpGrowPool` 
     returns 0 on success and -1 in an out-of-memory situation.
     
-    `mpAlloc` returns an object handle of type `size_t` on success and 
+    `mpAlloc` returns a valid object handle of type `size_t` on success and 
     `MP_INVALID_HANDLE` in an out-of-memory situation. Addresses of allocated 
     objects are not stable and may change when the pool resizes, but their 
     handles will remain valid until they are freed via `mpFree` or `mpFreePool`.
@@ -62,8 +62,8 @@ Notes:
     with a pool, you must free the entire pool using `mpFreePool`.
     
     After a call to `mpFreePool`, the capacity of a pool is 0 and all 
-    previously allocated handles are invalid. The pool can then be used to 
-    allocate new handles.
+    previously allocated handles are invalid. The pool can then be used again 
+    to allocate new handles.
     
     Identifiers defined by this library suffixed by an underscore (`_`) are for 
     internal use only. Your code should not contain any of them.
