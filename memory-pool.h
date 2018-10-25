@@ -119,9 +119,6 @@ void    mpFree_internal     (struct MemPool_internal* this, size_t handle);
 
 #include <stdlib.h>
 
-#define _MP_GROWTH_FACTOR_NUMERATOR     3
-#define _MP_GROWTH_FACTOR_DENOMINATOR   2
-
 static int _mpResize(struct MemPool_internal* this, size_t capacity)
 {
     void* temp = realloc(this->pBlocks, capacity * this->blockSize);
