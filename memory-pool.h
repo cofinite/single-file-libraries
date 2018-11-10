@@ -103,14 +103,14 @@ union {                     \
     } *pBlocks_;            \
 }
 
-#define mpInit(pMemPool)       {{NULL, 0, 0, -1, sizeof(*(pMemPool)->pBlocks_)}}
-#define mpAt(pMemPool, handle) ((pMemPool)->pBlocks_[handle].value)
-#define mpCapacity(pMemPool)   ((const size_t)(pMemPool)->pool_.capacity)
+#define mpInit(pPool)       {{NULL, 0, 0, -1, sizeof(*(pPool)->pBlocks_)}}
+#define mpAt(pPool, handle) ((pPool)->pBlocks_[handle].value)
+#define mpCapacity(pPool)   ((const size_t)(pPool)->pool_.capacity)
 
-#define mpGrowPool(pMemPool, num)   mpGrowPool_(&(pMemPool)->pool_, (num))
-#define mpFreePool(pMemPool)        mpFreePool_(&(pMemPool)->pool_)
-#define mpAlloc(pMemPool)           mpAlloc_(&(pMemPool)->pool_)
-#define mpFree(pMemPool, handle)    mpFree_(&(pMemPool)->pool_, (handle))
+#define mpGrowPool(pPool, num)   mpGrowPool_(&(pPool)->pool_, (num))
+#define mpFreePool(pPool)        mpFreePool_(&(pPool)->pool_)
+#define mpAlloc(pPool)           mpAlloc_(&(pPool)->pool_)
+#define mpFree(pPool, handle)    mpFree_(&(pPool)->pool_, (handle))
 
 int     mpGrowPool_ (struct MemPool_* this, size_t num);
 void    mpFreePool_ (struct MemPool_* this);
