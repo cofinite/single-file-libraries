@@ -14,10 +14,12 @@ An `interned<T>` is almost like a `T`, with a few notable pros and cons:
   values are immutable
 
 - `interned<T>` require an O(1) lookup when constructed from or assigned a `T`, 
-  and an O(1) cleanup when destroyed or assigned to
+  when destroyed, and potentially when assigned to
 
 In practice, this is useful when `T` is larger than a pointer and many 
 semantically equal `T` are expected to exist in memory at once.
+
+Note that the equivalence function for `T` should not throw.
 
 
 LICENSE
@@ -49,15 +51,15 @@ public:
     const T& operator*()  const { return  ptr->first; }
     const T* operator->() const { return &ptr->first; }
     
-    interned(const T& value)        { acquire(&*map.insert({value, 0}).first); }
-    interned(const interned& other) { acquire(other.ptr); }
-    interned(interned&& other)      { acquire(other.ptr); }
+    interned(const T& value)            { acquire(&*map.insert({value, 0}).first); }
+    interned(const interned& other)     { acquire(other.ptr); }
+    interned(interned&& other) noexcept { acquire(other.ptr); }
     
-    const interned& operator=(const T& value)        { acquire(&*map.insert({value, 0}).first); return *this; }
-    const interned& operator=(const interned& other) { acquire(other.ptr); return *this; }
-    const interned& operator=(interned&& other)      { acquire(other.ptr); return *this; }
+    const interned& operator=(const T& value)            { acquire(&*map.insert({value, 0}).first); return *this; }
+    const interned& operator=(const interned& other)     { acquire(other.ptr); return *this; }
+    const interned& operator=(interned&& other) noexcept { acquire(other.ptr); return *this; }
     
-    ~interned() { release(); }
+    ~interned() noexcept { release(); }
     
     bool operator==(const interned& other) const { return ptr == other.ptr; }
     bool operator!=(const interned& other) const { return ptr != other.ptr; }
