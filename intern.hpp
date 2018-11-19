@@ -13,8 +13,8 @@ An `interned<T>` is almost like a `T`, with a few notable pros and cons:
 ? `interned<T>` converts to a `const T&`: can be assigned a new value, but held 
   values are immutable
 
-- `interned<T>` require an O(1) lookup when constructed from or assigned a `T`, 
-  when destroyed, and potentially when assigned to
+- `interned<T>` require an O(1) lookup when constructed from or assigned a `T` 
+  and potentially when destroyed or assigned to
 
 In practice, this is useful when `T` is larger than a pointer and many 
 semantically equal `T` are expected to exist in memory at once.
