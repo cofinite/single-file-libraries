@@ -34,6 +34,8 @@ See end of file for license information.
 #include <cstddef>
 #include <functional>
 #include <unordered_map>
+#include <stdexcept>
+#include <limits>
 
 template <
     class T,
@@ -51,20 +53,21 @@ public:
     const T& operator*()  const { return  ptr->first; }
     const T* operator->() const { return &ptr->first; }
     
-    interned(const T& value)            { acquire(&*map.insert({value, 0}).first); }
-    interned(const interned& other)     { acquire(other.ptr); }
-    interned(interned&& other) noexcept { acquire(other.ptr); }
+    interned()                       { acquire(&*map.insert({T(), 0}).first); }
+    interned(const T& value)         { acquire(&*map.insert({value, 0}).first); }
+    interned(const interned& other)  { acquire(other.ptr); }
+    interned(const interned&& other) { acquire(other.ptr); }
     
-    const interned& operator=(const T& value)            { acquire(&*map.insert({value, 0}).first); return *this; }
-    const interned& operator=(const interned& other)     { acquire(other.ptr); return *this; }
-    const interned& operator=(interned&& other) noexcept { acquire(other.ptr); return *this; }
+    const interned& operator=(const T& value)         { acquire(&*map.insert({value, 0}).first); return *this; }
+    const interned& operator=(const interned& other)  { acquire(other.ptr); return *this; }
+    const interned& operator=(const interned&& other) { acquire(other.ptr); return *this; }
     
-    ~interned() noexcept { release(); }
+    ~interned() { release(); }
     
     bool operator==(const interned& other) const { return ptr == other.ptr; }
     bool operator!=(const interned& other) const { return ptr != other.ptr; }
     
-    static Size size() { return map.size(); }
+    static auto size() { return map.size(); }
     
 private:
     typedef typename std::unordered_map<T, Size, Hash, Equal>::value_type pair_type;
@@ -72,7 +75,7 @@ private:
     static std::unordered_map<T, Size, Hash, Equal> map;
     pair_type* ptr = nullptr;
     
-    void release() {
+    void release() noexcept {
         if (ptr != nullptr) {
             if (ptr->second <= 1) {
                 map.erase(ptr->first);
@@ -84,6 +87,9 @@ private:
     }
     
     void acquire(pair_type* pPair) {
+        if (pPair->second == std::numeric_limits<Size>::max()) {
+            throw std::range_error("too many of the same interned value (pass a larger size type)");
+        }
         pPair->second += 1;
         release();
         ptr = pPair;
