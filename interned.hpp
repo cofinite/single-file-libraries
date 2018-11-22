@@ -29,6 +29,15 @@ Example usage:
     
     cout << interned<string>::count() << endl;
     // prints "2", only two strings exist in memory
+    
+    cout << *x << endl;
+    // accessing the value
+
+    cout << x->at(0) << endl;
+    // accessing a const member function of the value
+
+    x = string("Brand new value");
+    // assigning a new value
 
 
 LICENSE
