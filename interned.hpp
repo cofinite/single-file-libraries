@@ -21,6 +21,15 @@ semantically equal `T` are expected to exist in memory at once.
 
 Note that the equivalence function for `T` should not throw.
 
+Example usage:
+    
+    interned<string> x = string("These strings are the same!");
+    interned<string> y = string("These strings are the same!");
+    interned<string> z = string("This string is different!");
+    
+    cout << interned<string>::count() << endl;
+    // prints "2", only two strings exist in memory
+
 
 LICENSE
 
@@ -67,7 +76,7 @@ public:
     bool operator==(const interned& other) const { return ptr == other.ptr; }
     bool operator!=(const interned& other) const { return ptr != other.ptr; }
     
-    static auto size() { return map.size(); }
+    static auto count() { return map.size(); }
     
 private:
     typedef typename std::unordered_map<T, Size, Hash, Equal>::value_type pair_type;
