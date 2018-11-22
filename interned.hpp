@@ -1,5 +1,5 @@
 /*
-intern.hpp - public domain - github.com/cofinite
+interned.hpp - public domain - github.com/cofinite
 
 The purpose of this library is to provide interning for an arbitrary type `T`.
 An `interned<T>` is almost like a `T`, with a few notable pros and cons:
